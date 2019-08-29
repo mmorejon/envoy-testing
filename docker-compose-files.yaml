@@ -1,0 +1,71 @@
+version: '3.7'
+services:
+  proxy-api-eds:
+    # image: envoyproxy/envoy:v1.11.1
+    build:
+      context: ./envoy-proxy
+      dockerfile: Dockerfile
+    command: envoy -c /etc/envoy/envoy.yaml --component-log-level client:trace,upstream:trace,http:debug,connection:debug,config:trace
+    ports:
+      - target: 443
+        published: 443
+        protocol: tcp
+        mode: host
+      - target: 9901
+        published: 9901
+        protocol: tcp
+        mode: host
+    volumes:
+      - type: bind
+        source: ./envoy-proxy/envoy-files.yaml
+        target: /etc/envoy/envoy.yaml
+      - type: bind
+        source: ./cert.pem
+        target: /cert.pem
+      - type: bind
+        source: ./key.pem
+        target: /key.pem
+      - type: bind
+        source: ./envoy-proxy/tmp-files
+        target: /tmp-files
+  udr1:
+    build:
+      context: ./server-http2
+      dockerfile: Dockerfile
+    ports:
+      - target: 8000
+        published: 8081
+        protocol: tcp
+        mode: host
+  # udr2:
+  #   build:
+  #     context: ./http-server
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - target: 443
+  #       published: 8082
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - type: bind
+  #       source: ./cert.pem
+  #       target: /opt/app/cert.pem
+  #     - type: bind
+  #       source: ./key.pem
+  #       target: /opt/app/key.pem
+  # udr3:
+  #   build:
+  #     context: ./http-server
+  #     dockerfile: Dockerfile
+  #   ports:
+  #     - target: 443
+  #       published: 8083
+  #       protocol: tcp
+  #       mode: host
+  #   volumes:
+  #     - type: bind
+  #       source: ./cert.pem
+  #       target: /opt/app/cert.pem
+  #     - type: bind
+  #       source: ./key.pem
+  #       target: /opt/app/key.pem
